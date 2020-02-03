@@ -308,18 +308,25 @@ odoo.define('pos_order_mgmt.widgets', function (require) {
                 if (_.isUndefined(product)) {
                     self.unknown_products.push(String(line.product_id));
                 } else {
+                    var returned_line_id = false;
                     var qty = line.qty;
                     if (['return'].indexOf(action) !== -1) {
                         // Invert line quantities
-                        qty *= -1;
+                        // qty *= -1;
+                        qty = (-1) * line.qty_returnable;
+                        returned_line_id = line.id;
                     }
                     // Create a new order line
-                    order.add_product(product, {
-                        price: line.price_unit,
-                        quantity: qty,
-                        discount: line.discount,
-                        merge: false,
-                    });
+                    if (qty !== 0) {
+                        order.add_product(product, {
+                            returned_line_id: returned_line_id,
+                            price: line.price_unit,
+                            quantity: qty,
+                            quantity_returnable: line.qty_returnable,
+                            discount: line.discount,
+                            merge: false,
+                        });
+                    }
                 }
             });
         },

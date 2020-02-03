@@ -61,7 +61,7 @@
                 <span t-if="widget.pos.config.iface_copy_done_order" class="button order-list-copy" t-att-data-order-id="order.id" t-att-data-Uid='order.uid' title="Create a new order based on this one">
                     <i class='fa fa-fw fa-copy'/>
                 </span>
-                <span t-if="widget.pos.config.iface_return_done_order and order.amount_total >= 0" class="button order-list-return" t-att-data-order-id="order.id" t-att-data-Uid='order.uid' title="Create a refund order of this order">
+                <span t-if="widget.pos.config.iface_return_done_order and order.is_returnable" class="button order-list-return" t-att-data-order-id="order.id" t-att-data-Uid='order.uid' title="Create a refund order of this order">
                     <i class='fa fa-fw fa-undo'/>
                 </span>
             </td>
