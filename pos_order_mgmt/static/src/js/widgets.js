@@ -18,6 +18,71 @@ odoo.define('pos_order_mgmt.widgets', function (require) {
     var ScreenWidget = screens.ScreenWidget;
     var DomCache = screens.DomCache;
 
+    screens.ActionpadWidget.include({
+
+        renderElement: function() {
+            var self = this;
+            this._super();
+
+            var button_pay_click_handler = $._data(
+                this.$el.find('.pay')[0], 'events').click[0].handler;
+            var button_pay = this.$('.pay');
+            button_pay.off('click');
+            button_pay.click(function(){
+                var order = self.pos.get_order();
+                if (self.check_return_order(order)) {
+                    button_pay_click_handler();
+                }
+            });
+
+        },
+
+        check_return_order: function (order) {
+            if (!order.returned_order_id) {
+                return true;
+            }
+
+            var lines = order.get_orderlines();
+            var qty_incorrect_lines = [], no_return_lines = [];
+            for (var i = 0; i < lines.length; i++) {
+                var qty_line = lines[i].get_quantity();
+                var product = lines[i].get_product();
+                if (!lines[i].returned_line_id) {
+                    // Prevent new lines addition to return orders
+                    no_return_lines.push(product.display_name);
+                } else if ((qty_line > 0) ||
+                    ((-1)*lines[i].quantity_returnable > qty_line)) {
+                    // Maximum quantity allowed exceeded
+                    qty_incorrect_lines.push(product.display_name + ': ' +
+                        lines[i].get_quantity_str());
+                }
+            }
+
+            if ((qty_incorrect_lines.length + no_return_lines.length) > 0) {
+                var error_message = _t('Please check the following line(s):');
+                if (qty_incorrect_lines.length > 0) {
+                    error_message += "\n\n";
+                    error_message += _t('* Invalid quantity line(s): ') +
+                        qty_incorrect_lines.join(', ');
+                }
+                if (no_return_lines.length > 0) {
+                    error_message += "\n\n";
+                    error_message += _t('* Non-returnable line(s): ') +
+                        no_return_lines.join(', ');
+                }
+                self.gui.show_popup(
+                    'error-traceback', {
+                        'title': _t('Return lines error(s)'),
+                        'body': error_message,
+                    });
+                return false;
+            }
+
+            return true;
+        }
+
+    });
+
     screens.ReceiptScreenWidget.include({
         render_receipt: function () {
             if (!this.pos.reloaded_order) {
